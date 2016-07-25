@@ -172,6 +172,7 @@ struct cfg {
     uint16_t port;
     uint8_t thrd_nr;
     char *dir;
+    char *ip;
 };
 
 struct status {

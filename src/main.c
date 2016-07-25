@@ -7,6 +7,7 @@
 #include <time.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "ae.h"
 #include "server.h"
@@ -20,7 +21,10 @@ struct server g_svr;
 
 /* Put event loop in the global scope, so it can be explicitly stopped */
 void *accept_worker(void *arg) {
-    int fd = anetTcpServer(NULL, g_svr.cfg.port, NULL, 127);
+    int fd = anetTcpServer(NULL, g_svr.cfg.port, g_svr.cfg.ip, 127);
+    if (fd <= 0) {
+        DIE("init server failed: %s", strerror(errno));
+    }
     anetNonBlock(NULL, fd);
     
     aeEventLoop *loop = aeCreateEventLoop(1024);
@@ -82,6 +86,7 @@ void *worker(void *arg) {
 
 static int cfg_def_init(struct cfg *cfg) 
 {
+    cfg->ip = "0.0.0.0";
     cfg->port = 80;
     cfg->dir = "./www";
     cfg->thrd_nr = 1;
@@ -98,7 +103,7 @@ static int parse_cmd_args(int argc, char **argv)
 
     opterr = 0;
 
-    while ((c = getopt(argc, argv, "p:d:t:?")) != -1) {
+    while ((c = getopt(argc, argv, "p:a:d:t:?")) != -1) {
         switch (c) {
             case 'p':
                 port = strtol(optarg, NULL, 10);
@@ -116,6 +121,9 @@ static int parse_cmd_args(int argc, char **argv)
                     abort();
                 }
                 g_svr.cfg.thrd_nr = (uint8_t)thrd_nr;
+                break;
+            case 'a':
+                g_svr.cfg.ip = optarg;
                 break;
             case 'd':
                 d = opendir(optarg);
