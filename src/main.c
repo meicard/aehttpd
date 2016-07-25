@@ -82,7 +82,7 @@ void *worker(void *arg) {
 
 static int cfg_def_init(struct cfg *cfg) 
 {
-    cfg->port = 8189;
+    cfg->port = 80;
     cfg->dir = "./www";
     cfg->thrd_nr = 1;
     return 0;
